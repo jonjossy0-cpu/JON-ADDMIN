@@ -5,7 +5,10 @@ module.exports = async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
 
   const rawPath = req.query && req.query.path;
-  const endpoint = Array.isArray(rawPath) ? rawPath[0] : rawPath;
+  let endpoint = Array.isArray(rawPath) ? rawPath[0] : rawPath;
+  if (!endpoint && req.url) {
+    try { endpoint = new URL(req.url, "https://admin-preview.invalid").pathname.split("/").filter(Boolean).pop(); } catch (_) {}
+  }
   if (!endpoint || !ALLOWED.has(String(endpoint))) {
     return res.status(404).json({ error: "Premium endpoint not found" });
   }
