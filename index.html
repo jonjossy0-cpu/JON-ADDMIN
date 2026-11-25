@@ -277,7 +277,7 @@ function renderInformationPanels(){
  set('infoPageChecked',new Date().toLocaleString());
  set('infoFirebase',firebaseReady?'Connected':'No successful snapshot yet');
  set('infoFirebaseLastSuccess',infoTime(firebaseLastSuccessAt));
- set('infoStatsSource','Source: existing Admin data in memory • Last successful Firestore snapshot: '+infoTime(firebaseLastSuccessAt));
+ set('infoStatsSource',(firebaseReady?'Source: existing Firestore Admin snapshot':'Source: local cached/default Admin data; current Firestore snapshot not yet confirmed')+' • Last successful snapshot: '+infoTime(firebaseLastSuccessAt));
  set('infoPremiumFreshness',premiumGrantsLoaded?'Source: existing Premium API response • Loaded in this Admin session. This is a grant-record count, not a unique subscriber count.':'Source: existing Premium API • Not loaded in this session; use Premium → Refresh to retrieve grant records.');
  set('infoTv',(d.tv||[]).length);set('infoRadio',(d.radio||[]).length);set('infoAds',(d.ads||[]).length);
  set('infoNotifications',(d.notifications||[]).length);set('infoBackgrounds',(d.backgrounds||[]).length);
