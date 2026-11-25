@@ -124,13 +124,13 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 <div class="panel"><h3 class="info-section-title">🔐 Security & Access</h3>
 <div class="monitor-row"><div><strong>Admin authentication</strong><small>Firebase Authentication session state</small></div><span class="info-status" id="infoSecurityAuth">Checking</span></div>
 <div class="monitor-row"><div><strong>Passwords / service-account keys</strong><small>Never displayed in the Admin interface</small></div><span class="info-status ok">Hidden</span></div>
-<div class="monitor-row"><div><strong>Additional Firestore activity</strong><small>Information/Monitoring additions</small></div><span class="info-status ok">No extra reads or writes</span></div>
-<div class="monitor-row"><div><strong>User-management write actions</strong><small>Require a separate secure API and audit controls</small></div><span class="info-status">Not enabled</span></div>
+<div class="monitor-row"><div><strong>Additional Firestore activity</strong><small>User totals are retrieved only when requested from Information.</small></div><span class="info-status ok">On-demand only</span></div>
+<div class="monitor-row"><div><strong>Email account block / unblock</strong><small>Firebase Authentication admin action; protected Admin accounts cannot be changed.</small></div><span class="info-status ok">Preview Users tab</span></div>
 </div>
 </section>
 
 <section id="monitoring" class="page">
-<div class="panel"><h2 class="info-section-title">🖥️ Server & Service Monitoring</h2><p class="muted">Check the serverless runtime on demand. Premium API status and latency come from the existing authenticated Premium requests; no extra Firestore reads, writes, listeners or background polling are added.</p><div class="row" style="align-items:center"><button class="primary" type="button" id="runMonitoringButton" onclick="runMonitoringChecks()">▶ Check server runtime</button><span class="muted" id="monLastCheck">No check has been run in this session.</span></div></div>
+<div class="panel"><h2 class="info-section-title">🖥️ Server & Service Monitoring</h2><p class="muted">Check the serverless runtime on demand. Premium API status and latency come from the existing authenticated Premium requests; Monitoring does not poll Firebase or add snapshot listeners. Account totals are fetched only when you refresh Users & Subscriptions.</p><div class="row" style="align-items:center"><button class="primary" type="button" id="runMonitoringButton" onclick="runMonitoringChecks()">▶ Check server runtime</button><span class="muted" id="monLastCheck">No check has been run in this session.</span></div></div>
 
 <div class="panel"><h3 class="info-section-title">📡 Service Health</h3><div class="info-grid">
 <div class="info-card"><div class="k">OVERALL SERVICE STATUS</div><div class="v" id="monOverallStatus">Partial checks</div><div class="hint">Based on runtime, existing Firebase listener and latest Premium API result</div></div>
