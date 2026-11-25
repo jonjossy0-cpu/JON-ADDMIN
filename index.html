@@ -136,10 +136,15 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 </div></div>
 
 <div class="panel"><h3 class="info-section-title">🚦 Infrastructure & Deployment</h3>
+<div class="info-grid">
+<div class="info-card"><div class="k">FUNCTION INSTANCE</div><div class="v" id="monRuntimeStatus">Not checked</div><div class="hint">Vercel serverless runtime response</div></div>
+<div class="info-card"><div class="k">INSTANCE UPTIME</div><div class="v" id="monRuntimeUptime">—</div><div class="hint">Current function instance only; not total Vercel platform uptime</div></div>
+<div class="info-card"><div class="k">PROCESS MEMORY (RSS)</div><div class="v" id="monRuntimeMemory">—</div><div class="hint">Memory used by this function instance</div></div>
+<div class="info-card"><div class="k">DEPLOYMENT REGION</div><div class="v" id="monRuntimeRegion">—</div><div class="hint" id="monRuntimeDetail">Deployment metadata returned by the runtime</div></div>
+</div>
 <div class="monitor-row"><div><strong>Admin deployment</strong><small id="monDeploymentDetail">Current hostname identifies the environment, not deployment health.</small></div><span class="info-status" id="monDeployStatus">Environment detected</span></div>
-<div class="monitor-row"><div><strong>Server uptime</strong><small>Requires an authenticated uptime/health endpoint.</small></div><span class="info-status">Endpoint not configured</span></div>
-<div class="monitor-row"><div><strong>CPU / RAM / network utilization</strong><small>These host-level metrics are not exposed by the current serverless integration.</small></div><span class="info-status">Not exposed</span></div>
-<div class="monitor-row"><div><strong>Vercel build and deployment logs</strong><small>Requires a secure server-side Vercel integration; no access token belongs in the browser.</small></div><span class="info-status">Integration not configured</span></div>
+<div class="monitor-row"><div><strong>CPU / network utilization</strong><small>Host-level CPU and network counters are not exposed by this serverless runtime; no estimated values are shown.</small></div><span class="info-status">Not exposed</span></div>
+<div class="monitor-row"><div><strong>Vercel build and deployment logs</strong><small>Build/runtime logs require a secure Vercel integration and are not read from the browser.</small></div><span class="info-status">Not queried</span></div>
 </div>
 
 <div class="panel"><h3 class="info-section-title">🧾 Errors, Alerts & Event History</h3>
@@ -306,6 +311,19 @@ async function runMonitoringChecks(){
  if(detail)detail.textContent='Requesting the public subscription configuration endpoint…';
  if(latency)latency.textContent='—';
  try{
+   try{
+     const runtimeResponse=await fetch('/api/monitor/runtime',{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
+     const runtime=await runtimeResponse.json();
+     if(!runtimeResponse.ok||runtime.status!=='healthy')throw new Error('Runtime probe returned HTTP '+runtimeResponse.status);
+     const runtimeStatus=$('monRuntimeStatus');if(runtimeStatus){runtimeStatus.textContent='Healthy';runtimeStatus.className='v';}
+     const uptime=$('monRuntimeUptime');if(uptime){const seconds=Number(runtime.instanceUptimeSeconds)||0;uptime.textContent=seconds<60?seconds+' sec':Math.floor(seconds/60)+' min '+(seconds%60)+' sec';}
+     const memory=$('monRuntimeMemory');if(memory)memory.textContent=runtime.memory&&Number.isFinite(Number(runtime.memory.rssMB))?runtime.memory.rssMB+' MB':'Not reported';
+     const region=$('monRuntimeRegion');if(region)region.textContent=runtime.region||'Region unavailable';
+     const runtimeDetail=$('monRuntimeDetail');if(runtimeDetail)runtimeDetail.textContent=(runtime.environment||'Environment unknown')+(runtime.commit?' • Commit '+String(runtime.commit).slice(0,7):'')+(runtime.deploymentHost?' • '+runtime.deploymentHost:'');
+   }catch(runtimeError){
+     const runtimeStatus=$('monRuntimeStatus');if(runtimeStatus){runtimeStatus.textContent='Unavailable';runtimeStatus.className='v';}
+     const runtimeDetail=$('monRuntimeDetail');if(runtimeDetail)runtimeDetail.textContent='Runtime probe failed: '+String(runtimeError&&runtimeError.message||runtimeError);
+   }
    const t0=performance.now();
    const response=await fetch('/api/monitor/subscription',{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
    const browserMs=Math.round(performance.now()-t0);
