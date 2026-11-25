@@ -104,10 +104,10 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 </div></div>
 
 <div class="panel"><h3 class="info-section-title">👥 Users & Subscriptions</h3><div class="info-grid">
-<div class="info-card"><div class="k">TOTAL USERS</div><div class="v" id="infoTotalUsers">Source not configured</div><div class="hint">No verified all-user count is available in the current Admin data/API.</div></div>
-<div class="info-card"><div class="k">ACTIVE USERS</div><div class="v" id="infoActiveUsers">Source not configured</div><div class="hint">A signed-in Admin session is not a count of app users.</div></div>
-<div class="info-card"><div class="k">TRIAL USERS</div><div class="v" id="infoTrialUsers">Source not configured</div><div class="hint">No verified aggregate trial-user endpoint is available.</div></div>
-<div class="info-card"><div class="k">PREMIUM SUBSCRIBERS</div><div class="v" id="infoPremiumUsers">Source not configured</div><div class="hint">Grant records are not necessarily unique active subscribers.</div></div>
+<div class="info-card"><div class="k">TOTAL USERS</div><div class="v" id="infoTotalUsers">Not counted</div><div class="hint">An approved aggregate account-count source is still required.</div></div>
+<div class="info-card"><div class="k">ACTIVE USERS</div><div class="v" id="infoActiveUsers">Not counted</div><div class="hint">The existing device-session records are not scanned by this dashboard; a low-read aggregate counter is required.</div></div>
+<div class="info-card"><div class="k">TRIAL USERS</div><div class="v" id="infoTrialUsers">Not counted</div><div class="hint">An approved aggregate subscription endpoint is still required.</div></div>
+<div class="info-card"><div class="k">PREMIUM SUBSCRIBERS</div><div class="v" id="infoPremiumUsers">Not counted</div><div class="hint">Existing grant records do not equal unique active subscribers.</div></div>
 </div><div class="info-note" style="margin-top:12px">User directory, search, registration totals, last-login/device details, subscription history and payment history require a secure, authorized backend data source. This panel does not read the Firebase users collection or expose private user/payment data.</div></div>
 
 <div class="panel"><h3 class="info-section-title">⚙️ Technical Configuration</h3><div class="info-grid">
@@ -129,7 +129,7 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 <div class="panel"><h2 class="info-section-title">🖥️ Server & Service Monitoring</h2><p class="muted">Check the serverless runtime on demand. Premium API status and latency come from the existing authenticated Premium requests; no extra Firestore reads, writes, listeners or background polling are added.</p><div class="row" style="align-items:center"><button class="primary" type="button" id="runMonitoringButton" onclick="runMonitoringChecks()">▶ Check server runtime</button><span class="muted" id="monLastCheck">No check has been run in this session.</span></div></div>
 
 <div class="panel"><h3 class="info-section-title">📡 Service Health</h3><div class="info-grid">
-<div class="info-card"><div class="k">ADMIN INTERFACE</div><div class="v" id="monPageStatus">Loaded</div><div class="hint">This page is executing in the browser</div></div>
+<div class="info-card"><div class="k">OVERALL SERVICE STATUS</div><div class="v" id="monOverallStatus">Partial checks</div><div class="hint">Based on runtime, existing Firebase listener and latest Premium API result</div></div>\n<div class="info-card"><div class="k">ADMIN INTERFACE</div><div class="v" id="monPageStatus">Loaded</div><div class="hint">This page is executing in the browser</div></div>
 <div class="info-card"><div class="k">FIREBASE / FIRESTORE</div><div class="v" id="monFirebaseStatus">Checking existing connection</div><div class="hint" id="monFirebaseDetail">Uses the existing Admin listener state</div></div>
 <div class="info-card"><div class="k">SUBSCRIPTION API</div><div class="v" id="monSubscriptionStatus">Not checked</div><div class="hint" id="monSubscriptionDetail">Uses the latest existing authenticated Premium API request; refresh Premium data to update</div></div>
 <div class="info-card"><div class="k">SUBSCRIPTION API RESPONSE</div><div class="v" id="monApiLatency">—</div><div class="hint">Measured in this browser during the last manual check</div></div>
@@ -307,6 +307,11 @@ function renderMonitoringPanels(){
  set('monApiLatency',premiumApiLastLatencyMs==null?'—':premiumApiLastLatencyMs+' ms');
  set('monApiEvent',premiumApiLastMessage||'No authenticated Premium API request recorded in this session.');
  const apiEventStatus=$('monApiEventStatus');if(apiEventStatus){apiEventStatus.textContent=apiState==='healthy'?'Success':(apiState==='failed'?'Failed':'Not checked');apiEventStatus.className='info-status '+(apiState==='healthy'?'ok':(apiState==='failed'?'bad':''));}
+ const runtimeText=$('monRuntimeStatus')?.textContent||'Not checked';
+ const firebaseFailed=!!firebaseLastErrorAt&&(!firebaseLastSuccessAt||firebaseLastErrorAt>firebaseLastSuccessAt);
+ const knownFailure=runtimeText==='Unavailable'||apiState==='failed'||firebaseFailed;
+ const allHealthy=runtimeText==='Healthy'&&apiState==='healthy'&&firebaseReady;
+ set('monOverallStatus',knownFailure?'Attention needed':(allHealthy?'Healthy':'Partial checks'));
 }
 async function runMonitoringChecks(){
  const button=$('runMonitoringButton');
