@@ -126,7 +126,7 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 </section>
 
 <section id="monitoring" class="page">
-<div class="panel"><h2 class="info-section-title">🖥️ Server & Service Monitoring</h2><p class="muted">Run an on-demand health check. Monitoring results are based on real responses; no background polling or extra Firebase requests are performed.</p><div class="row" style="align-items:center"><button class="primary" type="button" id="runMonitoringButton" onclick="runMonitoringChecks()">▶ Run health checks</button><span class="muted" id="monLastCheck">No check has been run in this session.</span></div></div>
+<div class="panel"><h2 class="info-section-title">🖥️ Server & Service Monitoring</h2><p class="muted">Check the serverless runtime on demand. Premium API status and latency come from the existing authenticated Premium requests; no extra Firestore reads, writes, listeners or background polling are added.</p><div class="row" style="align-items:center"><button class="primary" type="button" id="runMonitoringButton" onclick="runMonitoringChecks()">▶ Check server runtime</button><span class="muted" id="monLastCheck">No check has been run in this session.</span></div></div>
 
 <div class="panel"><h3 class="info-section-title">📡 Service Health</h3><div class="info-grid">
 <div class="info-card"><div class="k">ADMIN INTERFACE</div><div class="v" id="monPageStatus">Loaded</div><div class="hint">This page is executing in the browser</div></div>
@@ -301,7 +301,7 @@ function renderMonitoringPanels(){
  set('monDeploymentDetail','Host: '+location.hostname+'. This identifies the environment, not the Vercel deployment/build state.');
  set('monFirebaseEvent',firebaseLastErrorAt?'Last listener error: '+infoTime(firebaseLastErrorAt):(firebaseLastSuccessAt?'Last successful snapshot: '+infoTime(firebaseLastSuccessAt):'No listener event recorded yet.'));
  const fs=$('monFirebaseEventStatus');if(fs){fs.textContent=firebaseReady?'Healthy':'Pending / error';fs.className='info-status '+(firebaseReady?'ok':'bad');}
- const apiState=typeof premiumApiState==='undefined'?'not_checked':premiumApiState;
+ const apiState=premiumApiState;
  set('monSubscriptionStatus',apiState==='healthy'?'Healthy':(apiState==='failed'?'Request failed':'Not checked'));
  set('monSubscriptionDetail',apiState==='healthy'?'Verified through the existing authenticated Premium API request • '+infoTime(premiumApiLastSuccessAt):(apiState==='failed'?'Last Premium API request failed • '+infoTime(premiumApiLastErrorAt):'Use Premium → Refresh to check the authenticated API. Monitoring does not send an extra Firestore request.'));
  set('monApiLatency',premiumApiLastLatencyMs==null?'—':premiumApiLastLatencyMs+' ms');
