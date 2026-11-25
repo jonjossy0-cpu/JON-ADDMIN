@@ -301,48 +301,29 @@ function renderMonitoringPanels(){
  set('monDeploymentDetail','Host: '+location.hostname+'. This identifies the environment, not the Vercel deployment/build state.');
  set('monFirebaseEvent',firebaseLastErrorAt?'Last listener error: '+infoTime(firebaseLastErrorAt):(firebaseLastSuccessAt?'Last successful snapshot: '+infoTime(firebaseLastSuccessAt):'No listener event recorded yet.'));
  const fs=$('monFirebaseEventStatus');if(fs){fs.textContent=firebaseReady?'Healthy':'Pending / error';fs.className='info-status '+(firebaseReady?'ok':'bad');}
+ const apiState=typeof premiumApiState==='undefined'?'not_checked':premiumApiState;
+ set('monSubscriptionStatus',apiState==='healthy'?'Healthy':(apiState==='failed'?'Request failed':'Not checked'));
+ set('monSubscriptionDetail',apiState==='healthy'?'Verified through the existing authenticated Premium API request • '+infoTime(premiumApiLastSuccessAt):(apiState==='failed'?'Last Premium API request failed • '+infoTime(premiumApiLastErrorAt):'Use Premium → Refresh to check the authenticated API. Monitoring does not send an extra Firestore request.'));
+ set('monApiLatency',premiumApiLastLatencyMs==null?'—':premiumApiLastLatencyMs+' ms');
+ set('monApiEvent',premiumApiLastMessage||'No authenticated Premium API request recorded in this session.');
+ const apiEventStatus=$('monApiEventStatus');if(apiEventStatus){apiEventStatus.textContent=apiState==='healthy'?'Success':(apiState==='failed'?'Failed':'Not checked');apiEventStatus.className='info-status '+(apiState==='healthy'?'ok':(apiState==='failed'?'bad':''));}
 }
 async function runMonitoringChecks(){
  const button=$('runMonitoringButton');
  if(button){button.disabled=true;button.textContent='Checking…';}
  const started=Date.now();
- const status=$('monSubscriptionStatus'),detail=$('monSubscriptionDetail'),latency=$('monApiLatency'),event=$('monApiEvent'),eventStatus=$('monApiEventStatus');
- if(status){status.textContent='Checking';status.className='v';}
- if(detail)detail.textContent='Requesting the public subscription configuration endpoint…';
- if(latency)latency.textContent='—';
  try{
-   try{
-     const runtimeResponse=await fetch('/api/monitor/runtime',{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
-     const runtime=await runtimeResponse.json();
-     if(!runtimeResponse.ok||runtime.status!=='healthy')throw new Error('Runtime probe returned HTTP '+runtimeResponse.status);
-     const runtimeStatus=$('monRuntimeStatus');if(runtimeStatus){runtimeStatus.textContent='Healthy';runtimeStatus.className='v';}
-     const uptime=$('monRuntimeUptime');if(uptime){const seconds=Number(runtime.instanceUptimeSeconds)||0;uptime.textContent=seconds<60?seconds+' sec':Math.floor(seconds/60)+' min '+(seconds%60)+' sec';}
-     const memory=$('monRuntimeMemory');if(memory)memory.textContent=runtime.memory&&Number.isFinite(Number(runtime.memory.rssMB))?runtime.memory.rssMB+' MB':'Not reported';
-     const region=$('monRuntimeRegion');if(region)region.textContent=runtime.region||'Region unavailable';
-     const runtimeDetail=$('monRuntimeDetail');if(runtimeDetail)runtimeDetail.textContent=(runtime.environment||'Environment unknown')+(runtime.commit?' • Commit '+String(runtime.commit).slice(0,7):'')+(runtime.deploymentHost?' • '+runtime.deploymentHost:'');
-   }catch(runtimeError){
-     const runtimeStatus=$('monRuntimeStatus');if(runtimeStatus){runtimeStatus.textContent='Unavailable';runtimeStatus.className='v';}
-     const runtimeDetail=$('monRuntimeDetail');if(runtimeDetail)runtimeDetail.textContent='Runtime probe failed: '+String(runtimeError&&runtimeError.message||runtimeError);
-   }
-   const t0=performance.now();
-   const response=await fetch('/api/monitor/subscription',{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
-   const browserMs=Math.round(performance.now()-t0);
-   let body={};try{body=await response.json();}catch(_){}
-   if(!response.ok||body.status!=='healthy')throw new Error('Health check '+(body.status||'failed')+' • upstream HTTP '+(body.upstreamStatus||response.status));
-   const ms=Number.isFinite(Number(body.responseTimeMs))?Number(body.responseTimeMs):browserMs;
-   if(status){status.textContent='Healthy';status.className='v';}
-   if(detail)detail.textContent='Server-side probe succeeded • upstream HTTP '+body.upstreamStatus+' • checked '+new Date(body.checkedAt||Date.now()).toLocaleTimeString();
-   if(latency)latency.textContent=ms+' ms';
-   if(event)event.textContent='Successful upstream response at '+new Date(body.checkedAt||Date.now()).toLocaleString()+' • HTTP '+body.upstreamStatus+' • '+ms+' ms';
-   if(eventStatus){eventStatus.textContent='Success';eventStatus.className='info-status ok';}
+   const runtimeResponse=await fetch('/api/monitor/runtime',{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
+   const runtime=await runtimeResponse.json();
+   if(!runtimeResponse.ok||runtime.status!=='healthy')throw new Error('Runtime probe returned HTTP '+runtimeResponse.status);
+   const runtimeStatus=$('monRuntimeStatus');if(runtimeStatus){runtimeStatus.textContent='Healthy';runtimeStatus.className='v';}
+   const uptime=$('monRuntimeUptime');if(uptime){const seconds=Number(runtime.instanceUptimeSeconds)||0;uptime.textContent=seconds<60?seconds+' sec':Math.floor(seconds/60)+' min '+(seconds%60)+' sec';}
+   const memory=$('monRuntimeMemory');if(memory)memory.textContent=runtime.memory&&Number.isFinite(Number(runtime.memory.rssMB))?runtime.memory.rssMB+' MB':'Not reported';
+   const region=$('monRuntimeRegion');if(region)region.textContent=runtime.region||'Region unavailable';
+   const runtimeDetail=$('monRuntimeDetail');if(runtimeDetail)runtimeDetail.textContent=(runtime.environment||'Environment unknown')+(runtime.commit?' • Commit '+String(runtime.commit).slice(0,7):'')+(runtime.deploymentHost?' • '+runtime.deploymentHost:'');
  }catch(error){
-   const message=String(error&&error.message||error);
-   const likelyCors=/failed to fetch|networkerror|load failed/i.test(message);
-   if(status){status.textContent=likelyCors?'Browser request blocked / failed':'Request failed';status.className='v';}
-   if(detail)detail.textContent=likelyCors?'The browser could not read the endpoint response. Check API CORS, network and deployment configuration.':'The endpoint returned an error: '+message;
-   if(event)event.textContent='Failed at '+new Date().toLocaleString()+' • '+message;
-   if(eventStatus){eventStatus.textContent='Failed';eventStatus.className='info-status bad';}
-   if(latency)latency.textContent='No response';
+   const runtimeStatus=$('monRuntimeStatus');if(runtimeStatus){runtimeStatus.textContent='Unavailable';runtimeStatus.className='v';}
+   const runtimeDetail=$('monRuntimeDetail');if(runtimeDetail)runtimeDetail.textContent='Runtime probe failed: '+String(error&&error.message||error);
  }finally{
    const lastCheck=$('monLastCheck');if(lastCheck)lastCheck.textContent='Last check: '+new Date().toLocaleString()+' • '+(Date.now()-started)+' ms total';
    if(button){button.disabled=false;button.textContent='▶ Run health checks';}
@@ -362,8 +343,9 @@ $('sponsorPhotoUrls')?.addEventListener('input',renderSponsorPreview);
 $('sponsorPreviewGrid')?.addEventListener('click',e=>{const button=e.target.closest('[data-sponsor-action]');if(!button)return;const index=Number(button.dataset.sponsorIndex),action=button.dataset.sponsorAction;const urls=($('sponsorPhotoUrls').value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!Number.isInteger(index)||index<0||index>=urls.length)return;const url=urls[index];const settings=d.settings.sponsorLogoCarousel||(d.settings.sponsorLogoCarousel={});const states=Array.isArray(settings.photoStates)?settings.photoStates:[];if(action==='delete'){if(!confirm('Delete this sponsored logo?'))return;$('sponsorPhotoUrls').value=urls.filter((_,i)=>i!==index).join('\n');settings.photoStates=states.filter(x=>x.url!==url);saveSettings();return;}if(action==='toggle'){const enabled=states.find(x=>x.url===url)?.enabled!==false;settings.photoStates=urls.map(item=>({url:item,enabled:item===url?!enabled:(states.find(x=>canonicalSponsorUrl(x.url)===canonicalSponsorUrl(item))?.enabled!==false)}));saveSettings();}});
 $('addSponsorLogoButton')?.addEventListener('click',()=>{const field=$('sponsorSingleLogoUrl'),value=field.value.trim();if(!value)return alert('Enter a logo URL first.');let u;try{u=new URL(value);if(!['http:','https:'].includes(u.protocol))throw 0;}catch(e){return alert('Enter a valid HTTP/HTTPS logo URL.');}const list=($('sponsorPhotoUrls').value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(list.length>=20)return alert('Maximum 20 sponsor logos.');if(list.includes(u.href)||list.includes(value))return alert('This logo URL is already in the list.');list.push(u.href);$('sponsorPhotoUrls').value=list.join('\n');field.value='';renderSponsorPreview();});
 let premiumGrantsCache=[];let premiumGrantsLoaded=false;
+let premiumApiState='not_checked',premiumApiLastSuccessAt=null,premiumApiLastErrorAt=null,premiumApiLastLatencyMs=null,premiumApiLastMessage='';
 const PREMIUM_API='/api/premium';
-async function premiumApi(path,options={}){const user=auth&&auth.currentUser;if(!user)throw new Error('Please log in to Admin first.');const token=await user.getIdToken();const response=await fetch(PREMIUM_API+path,{...options,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(options.headers||{})}});let body={};try{body=await response.json()}catch(e){}if(!response.ok)throw new Error(body.error||('Request failed ('+response.status+')'));return body;}
+async function premiumApi(path,options={}){const user=auth&&auth.currentUser;if(!user)throw new Error('Please log in to Admin first.');const token=await user.getIdToken();const started=performance.now();try{const response=await fetch(PREMIUM_API+path,{...options,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(options.headers||{})}});const elapsed=Math.round(performance.now()-started);let body={};try{body=await response.json()}catch(e){}if(!response.ok)throw new Error(body.error||('Request failed ('+response.status+')'));premiumApiState='healthy';premiumApiLastSuccessAt=new Date().toISOString();premiumApiLastLatencyMs=elapsed;premiumApiLastMessage='Successful '+(options.method||'GET')+' '+path+' request • '+elapsed+' ms • '+infoTime(premiumApiLastSuccessAt);refreshMonitoringPanels();return body;}catch(error){premiumApiState='failed';premiumApiLastErrorAt=new Date().toISOString();premiumApiLastLatencyMs=Math.round(performance.now()-started);premiumApiLastMessage='Failed '+(options.method||'GET')+' '+path+' request • '+String(error&&error.message||error)+' • '+infoTime(premiumApiLastErrorAt);refreshMonitoringPanels();throw error;}}
 function premiumMessage(message,isError=false){const el=$('premiumStatus');if(el){el.textContent=message;el.style.color=isError?'#b91c1c':'#166534';}}
 async function loadPremium(){premiumMessage('Loading Premium settings and grants...');try{const config=await premiumApi('/config');$('pMonthly').value=config.monthlyPriceETB??499;$('pYearly').value=config.yearlyPriceETB??6000;$('pMonthlyDisplay').textContent=Number(config.monthlyPriceETB??499).toLocaleString()+' ETB';$('pYearlyDisplay').textContent=Number(config.yearlyPriceETB??6000).toLocaleString()+' ETB';const grants=await premiumApi('/grants');premiumGrantsCache=Array.isArray(grants.grants)?grants.grants:(Array.isArray(grants)?grants:[]);premiumGrantsLoaded=true;renderPremiumGrants();premiumMessage('Premium settings loaded. Access grants: '+premiumGrantsCache.length+'.');}catch(e){premiumMessage('Could not load Premium data: '+e.message+' — confirm API/admin setup.',true);}}
 async function savePremiumPrices(){const monthly=Number($('pMonthly').value),yearly=Number($('pYearly').value);if(!Number.isFinite(monthly)||monthly<0||!Number.isFinite(yearly)||yearly<0)return alert('Enter valid non-negative prices in ETB.');try{premiumMessage('Saving prices...');const data=await premiumApi('/config',{method:'POST',body:JSON.stringify({monthlyPriceETB:monthly,yearlyPriceETB:yearly})});$('pMonthlyDisplay').textContent=Number(data.monthlyPriceETB).toLocaleString()+' ETB';$('pYearlyDisplay').textContent=Number(data.yearlyPriceETB).toLocaleString()+' ETB';premiumMessage('Premium prices saved successfully.');}catch(e){premiumMessage('Price save failed: '+e.message,true);alert('Could not save prices: '+e.message);}}
