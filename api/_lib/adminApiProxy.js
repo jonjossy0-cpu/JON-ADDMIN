@@ -6,7 +6,7 @@ async function forward(req, res, endpoint, method) {
     return res.status(405).json({ error: "Method not allowed" });
   }
   const authorization = String(req.headers.authorization || "");
-  if (!/^Bearer\\s+\\S+$/i.test(authorization)) {
+  if (!/^Bearer\s+\S+$/i.test(authorization)) {
     return res.status(401).json({ error: "Admin authentication required" });
   }
   const shareToken = process.env.JON_STREAM_PREVIEW_SHARE_TOKEN;
