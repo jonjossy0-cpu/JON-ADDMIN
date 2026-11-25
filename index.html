@@ -131,7 +131,7 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 <div class="panel"><h3 class="info-section-title">📡 Service Health</h3><div class="info-grid">
 <div class="info-card"><div class="k">ADMIN INTERFACE</div><div class="v" id="monPageStatus">Loaded</div><div class="hint">This page is executing in the browser</div></div>
 <div class="info-card"><div class="k">FIREBASE / FIRESTORE</div><div class="v" id="monFirebaseStatus">Checking existing connection</div><div class="hint" id="monFirebaseDetail">Uses the existing Admin listener state</div></div>
-<div class="info-card"><div class="k">SUBSCRIPTION API</div><div class="v" id="monSubscriptionStatus">Not checked</div><div class="hint" id="monSubscriptionDetail">Run health checks to test the public configuration endpoint</div></div>
+<div class="info-card"><div class="k">SUBSCRIPTION API</div><div class="v" id="monSubscriptionStatus">Not checked</div><div class="hint" id="monSubscriptionDetail">Uses the latest existing authenticated Premium API request; refresh Premium data to update</div></div>
 <div class="info-card"><div class="k">SUBSCRIPTION API RESPONSE</div><div class="v" id="monApiLatency">—</div><div class="hint">Measured in this browser during the last manual check</div></div>
 </div></div>
 
@@ -149,7 +149,7 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 
 <div class="panel"><h3 class="info-section-title">🧾 Errors, Alerts & Event History</h3>
 <div class="monitor-row"><div><strong>Latest Firebase listener result</strong><small id="monFirebaseEvent">No new listener event recorded in this session.</small></div><span class="info-status" id="monFirebaseEventStatus">—</span></div>
-<div class="monitor-row"><div><strong>Latest Subscription API check</strong><small id="monApiEvent">No API health check has been run.</small></div><span class="info-status" id="monApiEventStatus">—</span></div>
+<div class="monitor-row"><div><strong>Latest authenticated Premium API request</strong><small id="monApiEvent">No API health check has been run.</small></div><span class="info-status" id="monApiEventStatus">—</span></div>
 <div class="info-note" style="margin-top:12px">Persistent incident history, alert delivery and server-side logs need a secure log/alert data source. This Preview does not claim to provide those records.</div>
 </div>
 </section>
