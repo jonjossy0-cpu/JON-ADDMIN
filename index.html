@@ -92,7 +92,7 @@ body[data-theme="dark"] .monitor-row{border-color:#334155}
 <div class="info-card"><div class="k">FIRESTORE CONNECTION</div><div class="v" id="infoFirebase">—</div><div class="hint">Reuses existing Admin snapshot listener</div></div>
 <div class="info-card"><div class="k">DATA DOCUMENT</div><div class="v">jonStream / appData</div><div class="hint">Existing Admin data document</div></div>
 <div class="info-card"><div class="k">LAST SUCCESSFUL SNAPSHOT</div><div class="v" id="infoFirebaseLastSuccess">—</div><div class="hint">Timestamp captured from existing listener</div></div>
-</div><p class="info-note" style="margin-top:12px">No additional Firestore reads, writes, listeners or polling are added by this Information panel. Firestore quota usage and remaining quota are not exposed by the current Admin connection.</p></div>
+</div><p class="info-note" style="margin-top:12px">User statistics are fetched only when you refresh Users & Subscriptions: total accounts come from Firebase Authentication; active sessions and trials use Firestore count queries; active Premium entitlements are read to exclude expired grants. No extra realtime listeners or background polling are added. Firestore quota remaining is not exposed here.</p></div>
 
 <div class="panel"><h3 class="info-section-title">📊 Content & Operational Statistics</h3><p class="muted" id="infoStatsSource">Source: current Admin in-memory data • Freshness is based on the existing Firestore snapshot listener.</p><div class="info-grid">
 <div class="info-card"><div class="k">TV CHANNELS</div><div class="v" id="infoTv">0</div><div class="hint">Source: Admin TV data</div></div>
