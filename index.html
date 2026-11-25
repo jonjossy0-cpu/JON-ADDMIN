@@ -326,7 +326,7 @@ async function runMonitoringChecks(){
    if(eventStatus){eventStatus.textContent='Failed';eventStatus.className='info-status bad';}
    if(latency)latency.textContent='No response';
  }finally{
-   set('monLastCheck','Last check: '+new Date().toLocaleString()+' • '+(Date.now()-started)+' ms total');
+   const lastCheck=$('monLastCheck');if(lastCheck)lastCheck.textContent='Last check: '+new Date().toLocaleString()+' • '+(Date.now()-started)+' ms total';
    if(button){button.disabled=false;button.textContent='▶ Run health checks';}
    renderMonitoringPanels();
  }
