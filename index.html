@@ -305,14 +305,15 @@ async function runMonitoringChecks(){
  if(latency)latency.textContent='—';
  try{
    const t0=performance.now();
-   const response=await fetch(PREMIUM_API+'/config',{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
-   const ms=Math.round(performance.now()-t0);
+   const response=await fetch('/api/monitor/subscription',{method:'GET',cache:'no-store',headers:{'Accept':'application/json'}});
+   const browserMs=Math.round(performance.now()-t0);
    let body={};try{body=await response.json();}catch(_){}
-   if(!response.ok)throw new Error('HTTP '+response.status+(body.error?': '+body.error:''));
+   if(!response.ok||body.status!=='healthy')throw new Error('Health check '+(body.status||'failed')+' • upstream HTTP '+(body.upstreamStatus||response.status));
+   const ms=Number.isFinite(Number(body.responseTimeMs))?Number(body.responseTimeMs):browserMs;
    if(status){status.textContent='Healthy';status.className='v';}
-   if(detail)detail.textContent='HTTP '+response.status+' • Public configuration endpoint responded successfully.';
+   if(detail)detail.textContent='Server-side probe succeeded • upstream HTTP '+body.upstreamStatus+' • checked '+new Date(body.checkedAt||Date.now()).toLocaleTimeString();
    if(latency)latency.textContent=ms+' ms';
-   if(event)event.textContent='Successful response at '+new Date().toLocaleString()+' • HTTP '+response.status+' • '+ms+' ms';
+   if(event)event.textContent='Successful upstream response at '+new Date(body.checkedAt||Date.now()).toLocaleString()+' • HTTP '+body.upstreamStatus+' • '+ms+' ms';
    if(eventStatus){eventStatus.textContent='Success';eventStatus.className='info-status ok';}
  }catch(error){
    const message=String(error&&error.message||error);
