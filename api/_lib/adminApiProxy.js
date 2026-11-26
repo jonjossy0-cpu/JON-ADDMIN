@@ -17,6 +17,8 @@ async function forward(req, res, endpoint, method) {
     url.searchParams.set("_vercel_share", shareToken);
     url.searchParams.set("mode", endpoint);
     if (method === "GET" && req.query && req.query.email) url.searchParams.set("email", String(req.query.email));
+    if (method === "GET" && req.query && req.query.limit) url.searchParams.set("limit", String(req.query.limit));
+    if (method === "GET" && req.query && req.query.pageToken) url.searchParams.set("pageToken", String(req.query.pageToken));
     if (method === "GET" && req.query && req.query.refresh === "1") url.searchParams.set("refresh", "1");
 
     const options = { method, headers: { Accept: "application/json", Authorization: authorization }, cache: "no-store", redirect: "manual" };
