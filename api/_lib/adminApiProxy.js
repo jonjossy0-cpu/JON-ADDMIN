@@ -16,8 +16,14 @@ async function forward(req, res, endpoint, method) {
     const url = new URL("https://jon-stream-b5u631wt2-jonjossy0-5772.vercel.app/api/admin");
     url.searchParams.set("_vercel_share", shareToken);
     url.searchParams.set("mode", endpoint);
-    if (method === "GET" && req.query && req.query.email) url.searchParams.set("email", String(req.query.email));
-    if (method === "GET" && req.query && req.query.refresh === "1") url.searchParams.set("refresh", "1");
+    if (method === "GET" && req.query) {
+      for (const key of ["email", "limit", "pageToken", "refresh"]) {
+        const value = req.query[key];
+        if (value !== undefined && value !== null && String(value) !== "") {
+          url.searchParams.set(key, String(value));
+        }
+      }
+    }
 
     const options = { method, headers: { Accept: "application/json", Authorization: authorization }, cache: "no-store", redirect: "manual" };
     if (method === "POST") {
