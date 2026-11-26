@@ -14,7 +14,7 @@ async function forward(req, res, endpoint, method) {
 
   try {
     const url = new URL("https://jon-stream-jrwt581jr-jonjossy0-5772.vercel.app/api/admin");
-    url.searchParams.set("_vercel_share", shareToken);
+    url.searchParams.set("x-vercel-protection-bypass", shareToken);
     url.searchParams.set("mode", endpoint);
     if (method === "GET" && req.query && req.query.email) url.searchParams.set("email", String(req.query.email));
     if (method === "GET" && req.query && req.query.limit) url.searchParams.set("limit", String(req.query.limit));
