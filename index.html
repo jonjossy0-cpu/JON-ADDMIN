@@ -367,16 +367,28 @@ async function logout(){try{if(auth)await signOut(auth)}catch(e){console.error(e
 
 let adminUserCurrent=null;
 async function adminUserRequest(path,options={}){const user=auth&&auth.currentUser;if(!user)throw new Error('Please sign in to Admin.');const token=await user.getIdToken();const response=await fetch(path,{...options,cache:'no-store',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(options.headers||{})}});let body={};try{body=await response.json()}catch(e){}if(!response.ok){const value=body&&body.error;const message=typeof value==='string'?value:(value&&typeof value==='object'?(value.message||value.error||value.code||JSON.stringify(value)):('Request failed ('+response.status+')'));throw new Error(String(message));}return body;}
-async function refreshUserSummary(){const status=$('userSummaryStatus');const fields=[['infoTotalUsers','totalUsers'],['infoActiveUsers','activeUsers'],['infoTrialUsers','activeTrials'],['infoPremiumUsers','premiumSubscribers']];fields.forEach(([id])=>{const el=$(id);if(el)el.textContent='Loading…';});if(status)status.textContent='Loading verified account statistics…';try{const data=await adminUserRequest('/api/admin-summary?refresh=1');fields.forEach(([id,key])=>{const el=$(id);if(el)el.textContent=data[key]===null||data[key]===undefined?'Unavailable':Number(data[key]).toLocaleString();});const errors=data.metricErrors||{};const stamp=data.generatedAt?new Date(data.generatedAt).toLocaleString():'Time unavailable';const failed=Object.keys(errors);$('userSummaryFreshness').textContent='Updated: '+stamp+' • Active users = active device sessions in the last '+(data.activeWindowMinutes||5)+' minutes'+(data.cached?' • cached':'')+(failed.length?' • Some metrics failed: '+failed.join(', '):'');if(status)status.textContent=failed.length?'Statistics loaded partially. Check the metric details below.':'Account statistics loaded successfully.';}catch(error){fields.forEach(([id])=>{const el=$(id);if(el)el.textContent='Unavailable';});const fresh=$('userSummaryFreshness');if(fresh)fresh.textContent='Statistics request failed: '+error.message;if(status)status.textContent='Could not load account statistics: '+error.message;}}
+async async function refreshUserSummary(){const status=$('userSummaryStatus');const fields=[['infoTotalUsers','totalUsers'],['infoActiveUsers','activeUsers'],['infoTrialUsers','activeTrials'],['infoPremiumUsers','premiumSubscribers']];fields.forEach(([id])=>{const el=$(id);if(el)el.textContent='Loading…';});if(status)status.textContent='Loading verified account statistics…';try{const data=await adminUserRequest('/api/admin-summary?refresh=1');fields.forEach(([id,key])=>{const el=$(id);if(el)el.textContent=data[key]===null||data[key]===undefined?'Unavailable':Number(data[key]).toLocaleString();});const errors=data.metricErrors||{};const stamp=data.generatedAt?new Date(data.generatedAt).toLocaleString():'Time unavailable';const failed=Object.keys(errors);$('userSummaryFreshness').textContent='Updated: '+stamp+' • Active users = active device sessions in the last '+(data.activeWindowMinutes||5)+' minutes'+(data.cached?' • cached':'')+(failed.length?' • Some metrics failed: '+failed.join(', '):'');if(status)status.textContent=failed.length?'Statistics loaded partially. Check the metric details below.':'Account statistics loaded successfully.';}catch(error){fields.forEach(([id])=>{const el=$(id);if(el)el.textContent='Unavailable';});const fresh=$('userSummaryFreshness');if(fresh)fresh.textContent='Statistics request failed: '+error.message;if(status)status.textContent='Could not load account statistics: '+error.message;}}
 let adminUserListNextPageToken=null;
 let adminUserListLoaded=0;
 function renderAdminUserList(users,append=false){
  const root=$('adminUserList');if(!root)return;
- const rows=(users||[]).map(user=>'<tr><td>'+esc(user.email||'—')+'</td><td>'+esc(user.displayName||'—')+'</td><td>'+(user.disabled?'Blocked':'Active')+'</td><td>'+(user.emailVerified?'Verified':'Not verified')+'</td><td><button class="secondary" type="button" data-user-email="'+esc(user.email||'')+'">Manage</button></td></tr>').join('');
- const table='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th align="left">Email</th><th align="left">Name</th><th align="left">Status</th><th align="left">Verification</th><th align="left">Action</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
- if(append)root.insertAdjacentHTML('beforeend',table.replace(/^.*?<tbody>/s,'<table><tbody>').replace(/<\/tbody><\/table><\/div>$/,'</tbody></table></div>'));
- else root.innerHTML=table;
- root.querySelectorAll('[data-user-email]').forEach(button=>{button.addEventListener('click',()=>{$('userEmailSearch').value=button.getAttribute('data-user-email')||'';lookupAdminUser();});});
+ let table=root.querySelector('table');
+ if(!table||!append){
+  root.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr><th align="left">Email</th><th align="left">Name</th><th align="left">Status</th><th align="left">Verification</th><th align="left">Action</th></tr></thead><tbody></tbody></table></div>';
+  table=root.querySelector('table');
+ }
+ const tbody=table.querySelector('tbody');
+ (users||[]).forEach(user=>{
+  const tr=document.createElement('tr');
+  const values=[user.email||'—',user.displayName||'—',user.disabled?'Blocked':'Active',user.emailVerified?'Verified':'Not verified'];
+  values.forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.appendChild(td);});
+  const actionCell=document.createElement('td');
+  const manage=document.createElement('button');manage.type='button';manage.className='secondary';manage.textContent='Manage';manage.addEventListener('click',()=>{$('userEmailSearch').value=user.email||'';lookupAdminUser();});
+  const toggle=document.createElement('button');toggle.type='button';toggle.className=user.disabled?'primary':'danger';toggle.style.marginLeft='6px';toggle.textContent=user.disabled?'Unblock':'Block';
+  toggle.addEventListener('click',async()=>{adminUserCurrent=user;await setAdminUserStatus(user.disabled?'unblock':'block');if(adminUserCurrent&&adminUserCurrent.email){await loadAdminUserList();}});
+  actionCell.append(manage,toggle);tr.appendChild(actionCell);tbody.appendChild(tr);
+ });
+ if(!(users||[]).length&&!append){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=5;td.textContent='No user accounts found.';tr.appendChild(td);tbody.appendChild(tr);}
 }
 async function loadAdminUserList(pageToken){
  const button=$('loadUserListButton'),more=$('userListMoreButton'),status=$('userLookupStatus'),root=$('adminUserList');
