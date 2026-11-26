@@ -13,7 +13,7 @@ async function forward(req, res, endpoint, method) {
   if (!shareToken) return res.status(503).json({ error: "JON Stream Preview access is not configured" });
 
   try {
-    const url = new URL("https://jon-stream-jrwt581jr-jonjossy0-5772.vercel.app/api/admin");
+    const url = new URL("https://jon-stream-3fctdcyh2-jonjossy0-5772.vercel.app/api/admin");
     url.searchParams.set("x-vercel-protection-bypass", shareToken);
     url.searchParams.set("mode", endpoint);
     if (method === "GET" && req.query && typeof req.query.email === "string" && req.query.email.trim()) url.searchParams.set("email", req.query.email.trim());
